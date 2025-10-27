@@ -9,7 +9,7 @@ import time
 # Load the .env file
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
+CHANNEL_ID = int(os.getenv("CHANNEL_ID", 0))
  
 #  ID of the user to tag
 USER_ID = 235097921740079104 # <-- Replace with your user ID
