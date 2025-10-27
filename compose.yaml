@@ -20,11 +20,9 @@ services:
         condition: service_started
     volumes:
       - ~/models:/models:ro
+      - ./images:/app/images:ro
     environment:
-      PORT: 3000
       OLLAMA_HOST: "http://ollama:11434"
-    ports:
-      - 3000:3000
     env_file:
       - ./.env
     restart: unless-stopped

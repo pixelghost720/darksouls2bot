@@ -15,7 +15,7 @@ CHANNEL_ID = int(os.getenv("CHANNEL_ID"))
 USER_ID = 235097921740079104 # <-- Replace with your user ID
  
 # Set the folder where your images are stored
-IMAGE_FOLDER = "/home/jon/DarkSouls2Bot/images"
+IMAGE_FOLDER = os.getenv("IMAGE_FOLDER", "/app/images")
  
 # Initialize image lists
 used_images = []

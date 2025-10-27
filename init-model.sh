@@ -4,10 +4,10 @@ set -e
 echo "Waiting for Ollama service to be ready..."
 until curl -s http://ollama:11434/api/tags > /dev/null 2>&1; do
     sleep 2
-    echo "Waiting for model..."
+    echo "Waiting for Ollama..."
 done
 
-echo "Model hermes is ready!"
+echo "Ollama service is ready!"
 
-echo "Starting quotes bot..."
-exec /app/bot
+echo "Starting Discord bot..."
+exec python /app/app.py
