@@ -45,6 +45,7 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    print(f"Received message from {message.author}: {message.content[:50]}...")
     # Ignore messages from the bot itself
     if message.author == bot.user:
         return
@@ -58,8 +59,6 @@ async def on_message(message):
     
     if not bot_mentioned and not starts_with_prefix:
         return
-    
-    print(f"Received message from {message.author}: {message.content[:50]}...")
     
     # Extract the prompt based on how the bot was triggered
     if bot_mentioned:
