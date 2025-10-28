@@ -8,6 +8,7 @@ import time
 from ollama import AsyncClient
  
 # Load the .env file
+print("Loading environment variables...")
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 CHANNEL_ID = int(os.getenv("CHANNEL_ID", 0))
@@ -15,6 +16,13 @@ PREFIX = os.getenv("PREFIX", "!")
 SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "You are a helpful assistant.")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
+
+print(f"Configuration loaded:")
+print(f"  - PREFIX: {PREFIX}")
+print(f"  - OLLAMA_HOST: {OLLAMA_HOST}")
+print(f"  - OLLAMA_MODEL: {OLLAMA_MODEL}")
+print(f"  - CHANNEL_ID: {CHANNEL_ID}")
+print(f"  - TOKEN present: {bool(TOKEN)}")
  
 #  ID of the user to tag
 USER_ID = 235097921740079104 # <-- Replace with your user ID
@@ -30,9 +38,14 @@ images_list = []
 conversation_contexts = {}
 
 # Set up bot
+print("Setting up Discord bot...")
 intents = discord.Intents.default()
 intents.message_content = True  # Enable message content intent for reading messages
+intents.messages = True  # Ensure messages intent is enabled
+intents.guilds = True  # Ensure guilds intent is enabled
+print("Intents configured - message_content, messages, and guilds enabled")
 bot = commands.Bot(command_prefix="!", intents=intents)
+print("Bot instance created")
  
 @bot.event
 async def on_ready():
@@ -162,4 +175,15 @@ async def send_random_image():
         print(f"Failed to send image: {e}")
  
 # Run the bot
-bot.run(TOKEN)
+if not TOKEN:
+    print("ERROR: DISCORD_TOKEN not found in environment variables!")
+    print("Please set DISCORD_TOKEN in your .env file")
+    exit(1)
+
+print(f"Starting bot with token: {TOKEN[:20]}...")
+try:
+    bot.run(TOKEN)
+except Exception as e:
+    print(f"ERROR: Failed to start bot: {e}")
+    import traceback
+    traceback.print_exc()
