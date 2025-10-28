@@ -5,7 +5,7 @@ import asyncio
 from discord.ext import tasks, commands
 from dotenv import load_dotenv
 import time
-import ollama
+from ollama import AsyncClient
  
 # Load the .env file
 load_dotenv()
@@ -14,6 +14,7 @@ CHANNEL_ID = int(os.getenv("CHANNEL_ID", 0))
 PREFIX = os.getenv("PREFIX", "!")
 SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "You are a helpful assistant.")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
+OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
  
 #  ID of the user to tag
 USER_ID = 235097921740079104 # <-- Replace with your user ID
@@ -36,6 +37,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})")
+    print(f"Prefix: '{PREFIX}'")
+    print(f"Ollama Host: {OLLAMA_HOST}")
+    print(f"Ollama Model: {OLLAMA_MODEL}")
     print("------")
     wait_until_top_of_hour.start()
 
@@ -54,6 +58,8 @@ async def on_message(message):
     
     if not bot_mentioned and not starts_with_prefix:
         return
+    
+    print(f"Received message from {message.author}: {message.content[:50]}...")
     
     # Extract the prompt based on how the bot was triggered
     if bot_mentioned:
@@ -75,8 +81,12 @@ async def on_message(message):
     try:
         # Show typing indicator while processing
         async with message.channel.typing():
-            # Make the call to Ollama with system prompt and context
-            response = ollama.chat(
+            print(f"Calling Ollama at {OLLAMA_HOST} with model {OLLAMA_MODEL}")
+            print(f"Prompt: {prompt[:100]}...")
+            
+            # Create async Ollama client and make the call with system prompt and context
+            client = AsyncClient(host=OLLAMA_HOST)
+            response = await client.chat(
                 model=OLLAMA_MODEL,
                 messages=[
                     {"role": "system", "content": SYSTEM_PROMPT},
@@ -87,6 +97,7 @@ async def on_message(message):
             
             # Extract the response content
             ai_response = response['message']['content']
+            print(f"Received response: {ai_response[:100]}...")
             
             # Update conversation context
             conversation_contexts[user_id].append({"role": "user", "content": prompt})
