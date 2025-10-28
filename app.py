@@ -5,6 +5,7 @@ import asyncio
 from discord.ext import tasks, commands
 from dotenv import load_dotenv
 import time
+import re
 from ollama import AsyncClient
  
 # Load the .env file
@@ -37,6 +38,16 @@ images_list = []
 # Store conversation context for each user
 conversation_contexts = {}
 
+def clean_response(text):
+    """Remove thinking tags and other unwanted content from AI response"""
+    # Remove <think>...</think> blocks (including multiline)
+    text = re.sub(r'<think>.*?</think>', '', text, flags=re.DOTALL)
+    # Remove any standalone <think> or </think> tags
+    text = re.sub(r'</?think>', '', text)
+    # Clean up extra whitespace
+    text = re.sub(r'\n\n\n+', '\n\n', text)
+    return text.strip()
+
 # Set up bot
 print("Setting up Discord bot...")
 intents = discord.Intents.default()
@@ -58,10 +69,18 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
-    print(f"Received message from {message.author}: {message.content[:50]}...")
     # Ignore messages from the bot itself
     if message.author == bot.user:
         return
+    
+    # React to specific users' messages
+    try:
+        if message.author.id == 227956376478023680:
+            await message.add_reaction("👍")
+        elif message.author.id == 235097921740079104:
+            await message.add_reaction("👎")
+    except Exception as e:
+        print(f"Failed to add reaction: {e}")
     
     # Process commands first
     await bot.process_commands(message)
@@ -104,12 +123,21 @@ async def on_message(message):
                     {"role": "system", "content": SYSTEM_PROMPT},
                     *conversation_contexts[user_id],
                     {"role": "user", "content": prompt}
-                ]
+                ],
+                options={
+                    "temperature": 0.7,
+                    "top_p": 0.9,
+                    "num_predict": 500,  # Limit response length to ~500 tokens
+                }
             )
             
             # Extract the response content
             ai_response = response['message']['content']
-            print(f"Received response: {ai_response[:100]}...")
+            print(f"Raw response: {ai_response[:100]}...")
+            
+            # Clean the response (remove thinking tags)
+            ai_response = clean_response(ai_response)
+            print(f"Cleaned response: {ai_response[:100]}...")
             
             # Update conversation context
             conversation_contexts[user_id].append({"role": "user", "content": prompt})
