@@ -110,6 +110,11 @@ async def on_message(message):
     # Get or initialize conversation context for this user
     user_id = message.author.id
     
+    # Block specific user from using the LLM
+    if user_id == 235097921740079104:
+        await message.add_reaction("🚫")  # Add blocked reaction
+        return
+    
     # Check if this user already has a request being processed
     if user_id in users_being_processed:
         await message.add_reaction("⏳")  # Add hourglass reaction to indicate busy
