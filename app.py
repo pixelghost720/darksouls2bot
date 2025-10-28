@@ -48,15 +48,23 @@ async def on_message(message):
     # Process commands first
     await bot.process_commands(message)
     
-    # Check if message starts with the prefix
-    if not message.content.startswith(PREFIX):
+    # Check if message starts with the prefix OR bot is mentioned
+    bot_mentioned = bot.user in message.mentions
+    starts_with_prefix = message.content.startswith(PREFIX)
+    
+    if not bot_mentioned and not starts_with_prefix:
         return
     
-    # Extract the prompt (everything after the prefix)
-    prompt = message.content[len(PREFIX):].strip()
+    # Extract the prompt based on how the bot was triggered
+    if bot_mentioned:
+        # Remove the bot mention from the message
+        prompt = message.content.replace(f'<@{bot.user.id}>', '').replace(f'<@!{bot.user.id}>', '').strip()
+    else:
+        # Extract everything after the prefix
+        prompt = message.content[len(PREFIX):].strip()
     
     if not prompt:
-        await message.channel.send("Please provide a message after the prefix.")
+        await message.channel.send("Please provide a message after mentioning me or using the prefix.")
         return
     
     # Get or initialize conversation context for this user
