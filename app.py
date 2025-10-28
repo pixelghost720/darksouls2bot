@@ -38,6 +38,9 @@ images_list = []
 # Store conversation context for each user
 conversation_contexts = {}
 
+# Track users currently being processed (to prevent queuing)
+users_being_processed = set()
+
 def clean_response(text):
     """Remove thinking tags and other unwanted content from AI response"""
     # Remove <think>...</think> blocks (including multiline)
@@ -106,6 +109,15 @@ async def on_message(message):
     
     # Get or initialize conversation context for this user
     user_id = message.author.id
+    
+    # Check if this user already has a request being processed
+    if user_id in users_being_processed:
+        await message.add_reaction("⏳")  # Add hourglass reaction to indicate busy
+        return
+    
+    # Mark this user as being processed
+    users_being_processed.add(user_id)
+    
     if user_id not in conversation_contexts:
         conversation_contexts[user_id] = []
     
@@ -158,6 +170,10 @@ async def on_message(message):
     except Exception as e:
         print(f"Error calling Ollama: {e}")
         await message.channel.send(f"Sorry, I encountered an error processing your request: {str(e)}")
+    finally:
+        # Always remove user from processing set when done
+        users_being_processed.discard(user_id)
+        print(f"Finished processing request for user {user_id}")
 
 @tasks.loop(count=1)
 async def wait_until_top_of_hour():
