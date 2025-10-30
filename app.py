@@ -18,12 +18,22 @@ SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "You are a helpful assistant.")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "llama2")
 OLLAMA_HOST = os.getenv("OLLAMA_HOST", "http://localhost:11434")
 
-print(f"Configuration loaded:")
+# Parse blocked user IDs from comma-separated list
+BLOCKED_USER_IDS_STR = os.getenv("BLOCKED_USER_IDS", "")
+BLOCKED_USER_IDS = set()
+if BLOCKED_USER_IDS_STR:
+    try:
+        BLOCKED_USER_IDS = {int(uid.strip()) for uid in BLOCKED_USER_IDS_STR.split(",") if uid.strip()}
+    except ValueError as e:
+        print(f"Warning: Invalid BLOCKED_USER_IDS format: {e}")
+
+print("Configuration loaded:")
 print(f"  - PREFIX: {PREFIX}")
 print(f"  - OLLAMA_HOST: {OLLAMA_HOST}")
 print(f"  - OLLAMA_MODEL: {OLLAMA_MODEL}")
 print(f"  - CHANNEL_ID: {CHANNEL_ID}")
 print(f"  - TOKEN present: {bool(TOKEN)}")
+print(f"  - BLOCKED_USER_IDS: {BLOCKED_USER_IDS if BLOCKED_USER_IDS else 'None'}")
  
 #  ID of the user to tag
 USER_ID = 235097921740079104 # <-- Replace with your user ID
@@ -110,8 +120,8 @@ async def on_message(message):
     # Get or initialize conversation context for this user
     user_id = message.author.id
     
-    # Block specific user from using the LLM
-    if user_id == 235097921740079104:
+    # Block specific users from using the LLM
+    if user_id in BLOCKED_USER_IDS:
         await message.add_reaction("🚫")  # Add blocked reaction
         return
     
